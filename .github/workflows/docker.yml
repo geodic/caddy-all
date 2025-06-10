@@ -50,7 +50,8 @@ jobs:
       - name: Get Caddy version and plugins
         id: caddy-version
         run: |
-          CADDY_VERSION=$(curl -s https://api.github.com/repos/caddyserver/caddy/releases/latest | jq -r .tag_name | sed 's/v//')
+          # Get the latest 2.9.x version instead of latest
+          CADDY_VERSION=$(curl -s 'https://api.github.com/repos/caddyserver/caddy/releases' | jq -r '[.[] | select(.tag_name | startswith("v2.9."))] | first | .tag_name' | sed 's/v//')
           echo "version=$CADDY_VERSION" >> $GITHUB_OUTPUT
           
           # Get all DNS plugins from the organization and check for go.mod
