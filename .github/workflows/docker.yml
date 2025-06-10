@@ -50,66 +50,38 @@ jobs:
       - name: Get Caddy version and plugins
         id: caddy-version
         run: |
-          # Get the latest 2.9.x version instead of latest
-          CADDY_VERSION=$(curl -s 'https://api.github.com/repos/caddyserver/caddy/releases' | jq -r '[.[] | select(.tag_name | startswith("v2.9."))] | first | .tag_name' | sed 's/v//')
+          CADDY_VERSION=$(curl -s https://api.github.com/repos/caddyserver/caddy/releases/latest | jq -r .tag_name | sed 's/v//')
           echo "version=$CADDY_VERSION" >> $GITHUB_OUTPUT
           
-          # Function to compare semantic versions
-          version_gte() {
-            # $1 = version to check, $2 = minimum version
-            printf '%s\n%s\n' "$2" "$1" | sort -V -C
-            return $?
-          }
-
-          version_lt() {
-            # $1 = version to check, $2 = maximum version
-            ! version_gte "$1" "$2"
-            return $?
-          }
-
-          extract_go_mod_version() {
-            # Extract version requirement from go.mod line
-            # Input example: require github.com/caddyserver/caddy/v2 v2.9.1
-            echo "$1" | grep -o 'v[0-9]\+\.[0-9]\+\.[0-9]\+' || echo ""
-          }
-
-          # Function to check if a tag exists and is compatible with Caddy 2.9.1
-          check_compatible_version() {
-            local repo=$1
-            local target_version="2.9.1"
-            local tags_url="https://api.github.com/repos/caddy-dns/$repo/tags"
-            
-            # Get all tags
-            for tag in $(curl -s "$tags_url" | jq -r '.[].name'); do
-              # For each tag, check its go.mod for Caddy compatibility
-              go_mod_url="https://raw.githubusercontent.com/caddy-dns/$repo/$tag/go.mod"
-              if caddy_req=$(curl -s "$go_mod_url" | grep "github.com/caddyserver/caddy/v2" | head -n1); then
-                # Extract the actual version requirement
-                req_version=$(extract_go_mod_version "$caddy_req")
-                if [ ! -z "$req_version" ]; then
-                  req_version=${req_version#v}  # Remove 'v' prefix
-                  # Check if the required version is compatible (>= 2.7.0 and < 2.10.0)
-                  if version_gte "$req_version" "2.7.0" && version_lt "$req_version" "2.10.0"; then
-                    echo "$tag"
-                    return 0
-                  fi
-                fi
-              fi
-            done
-            return 1
-          }
+          # Start building xcaddy args
+          XCADDY_ARGS=""
           
-          # Start building xcaddy args with Caddy version
-          XCADDY_ARGS="v$CADDY_VERSION"
-          
-          # Get all DNS plugins and check compatibility
+          # List of excluded providers
+          declare -a EXCLUDED=(
+            "cloudns" "dinahosting" "directadmin" "ddnss" "dnsexit" "dnsmadeeasy" "dnspod" "dnsimple" 
+            "dreamhost" "dynv6" "easydns" "gandi" "gcore" "godaddy" "exoscale" "civo" "hosttech" 
+            "hexonet" "katapult" "leaseweb" "huaweicloud" "googleclouddns" "metaname" "mythicbeasts" 
+            "namedotcom" "namesilo" "namecheap" "netcup" "linode" "neoserv" "njalla" 
+            "openstack-designate" "dns-regery" "regfish" "powerdns" "netlify" "selectel" "vercel" 
+            "transip" "westcn" "route53"
+          )
+
+          # Get all DNS plugins and check for go.mod
           for repo in $(curl -s 'https://api.github.com/orgs/caddy-dns/repos?per_page=100' | jq -r '.[] | select(.archived == false and .name != "template") | .name'); do
+            # Skip if repo is in excluded list
+            if [[ " ${EXCLUDED[@]} " =~ " ${repo} " ]]; then
+              echo "⨯ Skipping excluded provider: $repo"
+              continue
+            fi
+            
             echo "Checking $repo..."
-            if compatible_version=$(check_compatible_version "$repo"); then
-              echo "✓ Found compatible version for $repo: $compatible_version"
-              XCADDY_ARGS="$XCADDY_ARGS --with github.com/caddy-dns/$repo@$compatible_version"
+            # Check if repo has go.mod in default branch
+            if curl -s -f "https://raw.githubusercontent.com/caddy-dns/$repo/master/go.mod" > /dev/null || \
+               curl -s -f "https://raw.githubusercontent.com/caddy-dns/$repo/main/go.mod" > /dev/null; then
+              echo "✓ Found valid Go module: $repo"
+              XCADDY_ARGS="$XCADDY_ARGS --with github.com/caddy-dns/$repo"
             else
-              echo "✗ No compatible version found for $repo"
+              echo "✗ No go.mod found for $repo"
             fi
           done
           

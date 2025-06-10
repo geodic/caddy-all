@@ -16,6 +16,7 @@ A custom built Caddy image that includes all plugins from caddy-dns. This image 
 - Namecheap
 - Amazon Route53
 - Vultr
+- And more!
 
 ## Usage
 
