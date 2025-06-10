@@ -55,7 +55,7 @@ jobs:
           echo "version=$CADDY_VERSION" >> $GITHUB_OUTPUT
           
           # Get all DNS plugins from the organization and check for go.mod
-          XCADDY_ARGS=""
+          XCADDY_ARGS="v$CADDY_VERSION"
           for repo in $(curl -s 'https://api.github.com/orgs/caddy-dns/repos?per_page=100' | jq -r '.[] | select(.archived == false and .name != "template") | .name'); do
             # Check if repo has go.mod in default branch
             if curl -s -f "https://raw.githubusercontent.com/caddy-dns/$repo/master/go.mod" > /dev/null || \

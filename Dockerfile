@@ -1,4 +1,4 @@
-FROM caddy:2.9.1-builder AS builder
+FROM caddy:builder AS builder
 
 ARG XCADDY_ARGS
 RUN xcaddy build ${XCADDY_ARGS}
