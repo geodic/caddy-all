@@ -1,5 +1,10 @@
 name: Build and Push Docker Image
 
+# Concurrency group scoped to the workflow run. The last run will cancel any in-progress job.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [ main ]
