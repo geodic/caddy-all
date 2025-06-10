@@ -53,11 +53,17 @@ jobs:
           CADDY_VERSION=$(curl -s https://api.github.com/repos/caddyserver/caddy/releases/latest | jq -r .tag_name | sed 's/v//')
           echo "version=$CADDY_VERSION" >> $GITHUB_OUTPUT
           
-          # Get all DNS plugins from the organization
-          PLUGINS=$(curl -s 'https://api.github.com/orgs/caddy-dns/repos?per_page=100' | jq -r '.[] | select(.archived == false and .name != "template") | .name')
+          # Get all DNS plugins from the organization and check for go.mod
           XCADDY_ARGS=""
-          for plugin in $PLUGINS; do
-            XCADDY_ARGS="$XCADDY_ARGS --with github.com/caddy-dns/$plugin"
+          for repo in $(curl -s 'https://api.github.com/orgs/caddy-dns/repos?per_page=100' | jq -r '.[] | select(.archived == false and .name != "template") | .name'); do
+            # Check if repo has go.mod in default branch
+            if curl -s -f "https://raw.githubusercontent.com/caddy-dns/$repo/master/go.mod" > /dev/null || \
+               curl -s -f "https://raw.githubusercontent.com/caddy-dns/$repo/main/go.mod" > /dev/null; then
+              echo "Found valid Go module: $repo"
+              XCADDY_ARGS="$XCADDY_ARGS --with github.com/caddy-dns/$repo"
+            else
+              echo "Skipping $repo: no go.mod found"
+            fi
           done
           echo "xcaddy_args=$XCADDY_ARGS" >> $GITHUB_OUTPUT
 
