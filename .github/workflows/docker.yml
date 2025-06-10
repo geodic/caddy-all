@@ -47,11 +47,19 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Get Caddy version
+      - name: Get Caddy version and plugins
         id: caddy-version
         run: |
           CADDY_VERSION=$(curl -s https://api.github.com/repos/caddyserver/caddy/releases/latest | jq -r .tag_name | sed 's/v//')
           echo "version=$CADDY_VERSION" >> $GITHUB_OUTPUT
+          
+          # Get all DNS plugins from the organization
+          PLUGINS=$(curl -s 'https://api.github.com/orgs/caddy-dns/repos?per_page=100' | jq -r '.[] | select(.archived == false and .name != "template") | .name')
+          XCADDY_ARGS=""
+          for plugin in $PLUGINS; do
+            XCADDY_ARGS="$XCADDY_ARGS --with github.com/caddy-dns/$plugin"
+          done
+          echo "xcaddy_args=$XCADDY_ARGS" >> $GITHUB_OUTPUT
 
       - name: Extract metadata for Docker
         id: meta
@@ -85,5 +93,7 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            XCADDY_ARGS=${{ steps.caddy-version.outputs.xcaddy_args }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
