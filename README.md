@@ -23,10 +23,10 @@ You can pull the image from either GHCR or Docker Hub:
 
 ```bash
 # From GitHub Container Registry
-docker pull ghcr.io/OWNER/caddy-all:latest
+docker pull ghcr.io/geodic/caddy-all:latest
 
 # From Docker Hub
-docker pull DOCKERHUB_USERNAME/caddy-all:latest
+docker pull th3geodic/caddy-all:latest
 ```
 
 ### Running the container
@@ -39,7 +39,7 @@ docker run -d \
   -v $PWD/Caddyfile:/etc/caddy/Caddyfile \
   -v caddy_data:/data \
   -v caddy_config:/config \
-  ghcr.io/OWNER/caddy-all:latest
+  ghcr.io/geodic/caddy-all:latest
 ```
 
 ## Building Locally
