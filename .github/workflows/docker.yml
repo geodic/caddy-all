@@ -62,7 +62,7 @@ jobs:
             "dreamhost" "dynv6" "easydns" "gandi" "gcore" "godaddy" "exoscale" "civo" "hosttech" 
             "hexonet" "katapult" "leaseweb" "huaweicloud" "googleclouddns" "metaname" "mythicbeasts" 
             "namedotcom" "namesilo" "namecheap" "netcup" "linode" "neoserv" "njalla" 
-            "openstack-designate" "dns-regery" "regfish" "powerdns" "netlify" "selectel" "vercel" 
+            "openstack-designate" "regery" "regfish" "powerdns" "netlify" "selectel" "vercel" 
             "transip" "westcn" "route53"
           )
 
