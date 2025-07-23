@@ -84,6 +84,9 @@ jobs:
               echo "✗ No go.mod found for $repo"
             fi
           done
+
+          # Add a few extras
+          XCADDY_ARGS="$XCADDY_ARGS --with github.com/tailscale/caddy-tailscale"
           
           echo "xcaddy_args=$XCADDY_ARGS" >> $GITHUB_OUTPUT
 
