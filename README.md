@@ -1,6 +1,6 @@
 # caddy-all
 
-A custom built Caddy image that includes all plugins from caddy-dns. This image is automatically built and pushed to both GitHub Container Registry and Docker Hub weekly to ensure it stays up to date with the latest Caddy version and DNS provider plugins.
+A custom built Caddy image that includes all plugins from caddy-dns plus a few extras. This image is automatically built and pushed to both GitHub Container Registry and Docker Hub weekly to ensure it stays up to date with the latest Caddy version and DNS provider plugins.
 
 ## Included DNS Plugins
 
